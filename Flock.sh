@@ -91,6 +91,10 @@ function check_node() {
     pm2 logs llm-loss-validator
 }
 
+function uninstall_node() {
+    pm2 delete llm-loss-validator && rm -rf llm-loss-validator
+}
+
 # 主菜单
 function main_menu() {
     clear
@@ -101,10 +105,12 @@ function main_menu() {
     echo "请选择要执行的操作:"
     echo "1. 安装常规节点"
     echo "2. 查看节点日志"
-    read -p "请输入选项（1-2）: " OPTION
+    echo "3. 删除节点"
+    read -p "请输入选项（1-3）: " OPTION
     case $OPTION in
     1) install_node ;;
     2) check_node ;;
+    3) uninstall_node ;;
     *) echo "无效选项。" ;;
     esac
 }
