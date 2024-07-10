@@ -53,8 +53,8 @@ function install_node() {
     install_conda
     install_nodejs_and_npm
     install_pm2
-    sudo apt update && sudo apt upgrade -y
-    sudo apt install curl iptables build-essential wget jq make gcc nano -y
+    apt update && apt upgrade -y
+    apt install curl sudo iptables build-essential wget jq make gcc nano -y
     read -p "输入Hugging face API: " HF_TOKEN
     read -p "输入Flock API: " FLOCK_API_KEY
     read -p "输入任务ID: " TASK_ID
