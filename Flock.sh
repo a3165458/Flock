@@ -54,7 +54,7 @@ function install_node() {
     install_nodejs_and_npm
     install_pm2
     apt update && apt upgrade -y
-    apt install curl sudo iptables build-essential wget jq make gcc nano -y
+    apt install curl sudo iptables build-essential wget jq make gcc nano npm -y
     read -p "输入Hugging face API: " HF_TOKEN
     read -p "输入Flock API: " FLOCK_API_KEY
     read -p "输入任务ID: " TASK_ID
