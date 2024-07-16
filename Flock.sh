@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Miniconda安装路径
+MINICONDA_PATH="$HOME/miniconda"
+CONDA_EXECUTABLE="$MINICONDA_PATH/bin/conda"
+
 # 检查是否以root用户运行脚本
 if [ "$(id -u)" != "0" ]; then
     echo "此脚本需要以root用户权限运行。"
@@ -7,32 +11,55 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
+# 确保 conda 被正确初始化
+ensure_conda_initialized() {
+    if [ -f "$HOME/.bashrc" ]; then
+        source "$HOME/.bashrc"
+    fi
+    if [ -f "$CONDA_EXECUTABLE" ]; then
+        eval "$("$CONDA_EXECUTABLE" shell.bash hook)"
+    fi
+}
+
 # 检查并安装 Conda
 function install_conda() {
-    if command -v conda > /dev/null 2>&1; then
-        echo "Conda 已安装"
+    if [ -f "$CONDA_EXECUTABLE" ]; then
+        echo "Conda 已安装在 $MINICONDA_PATH"
+        ensure_conda_initialized
     else
         echo "Conda 未安装，正在安装..."
         wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-        bash miniconda.sh -b -p $HOME/miniconda
+        bash miniconda.sh -b -p $MINICONDA_PATH
+        rm miniconda.sh
+        
+        # 初始化 conda
+        "$CONDA_EXECUTABLE" init
+        ensure_conda_initialized
+        
         echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
         source ~/.bashrc
-        conda init
-        source ~/.bashrc
+    fi
+    
+    # 验证 conda 是否可用
+    if command -v conda &> /dev/null; then
+        echo "Conda 安装成功，版本: $(conda --version)"
+    else
+        echo "Conda 安装可能成功，但无法在当前会话中使用。"
+        echo "请在脚本执行完成后，重新登录或运行 'source ~/.bashrc' 来激活 Conda。"
     fi
 }
 
 # 检查并安装 Node.js 和 npm
 function install_nodejs_and_npm() {
     if command -v node > /dev/null 2>&1; then
-        echo "Node.js 已安装"
+        echo "Node.js 已安装，版本: $(node -v)"
     else
         echo "Node.js 未安装，正在安装..."
         curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
         sudo apt-get install -y nodejs
     fi
     if command -v npm > /dev/null 2>&1; then
-        echo "npm 已安装"
+        echo "npm 已安装，版本: $(npm -v)"
     else
         echo "npm 未安装，正在安装..."
         sudo apt-get install -y npm
@@ -42,7 +69,7 @@ function install_nodejs_and_npm() {
 # 检查并安装 PM2
 function install_pm2() {
     if command -v pm2 > /dev/null 2>&1; then
-        echo "PM2 已安装"
+        echo "PM2 已安装，版本: $(pm2 -v)"
     else
         echo "PM2 未安装，正在安装..."
         npm install pm2@latest -g
@@ -51,6 +78,7 @@ function install_pm2() {
 
 function install_node() {
     install_conda
+    ensure_conda_initialized
     install_nodejs_and_npm
     install_pm2
     apt update && apt upgrade -y
@@ -64,7 +92,7 @@ function install_node() {
     cd llm-loss-validator
     # 创建并激活conda环境
     conda create -n llm-loss-validator python==3.10 -y
-    source activate llm-loss-validator
+    source "$MINICONDA_PATH/bin/activate" llm-loss-validator
     # 安装依赖
     pip install -r requirements.txt
     # 获取当前目录的绝对路径
@@ -72,7 +100,7 @@ function install_node() {
     # 创建启动脚本
     cat << EOF > run_validator.sh
 #!/bin/bash
-source $HOME/miniconda/bin/activate llm-loss-validator
+source "$MINICONDA_PATH/bin/activate" llm-loss-validator
 cd $SCRIPT_DIR/src
 CUDA_VISIBLE_DEVICES=0 \
 bash start.sh \
