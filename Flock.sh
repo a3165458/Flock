@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Miniconda安装路径
 MINICONDA_PATH="$HOME/miniconda"
 CONDA_EXECUTABLE="$MINICONDA_PATH/bin/conda"
@@ -123,22 +122,68 @@ function uninstall_node() {
     pm2 delete llm-loss-validator && rm -rf llm-loss-validator
 }
 
+function install_train_node() {
+    install_conda
+    ensure_conda_initialized
+    
+    # 安装必要的工具
+    apt update && apt upgrade -y
+    apt install curl sudo python3-venv iptables build-essential wget jq make gcc nano git -y
+    
+    # 克隆 QuickStart 仓库
+    git clone https://github.com/FLock-io/testnet-training-node-quickstart.git
+    cd testnet-training-node-quickstart
+    
+    # 创建并激活 conda 环境
+    conda create -n training-node python==3.10 -y
+    source "$MINICONDA_PATH/bin/activate" training-node
+    
+    # 安装依赖
+    pip install -r requirements.txt
+    
+    # 获取必要信息
+    read -p "输入任务ID (TASK_ID): " TASK_ID
+    read -p "输入Flock API Key: " FLOCK_API_KEY
+    read -p "输入Hugging Face Token: " HF_TOKEN
+    read -p "输入Hugging Face 用户名: " HF_USERNAME
+    
+    # 创建运行脚本
+    cat << EOF > run_training_node.sh
+#!/bin/bash
+source "$MINICONDA_PATH/bin/activate" training-node
+TASK_ID=$TASK_ID FLOCK_API_KEY="$FLOCK_API_KEY" HF_TOKEN="$HF_TOKEN" CUDA_VISIBLE_DEVICES=0 HF_USERNAME="$HF_USERNAME" python full_automation.py
+EOF
+    
+    chmod +x run_training_node.sh
+    
+    # 使用 PM2 启动训练节点
+    pm2 start run_training_node.sh --name "flock-training-node"
+    
+    echo "训练节点已启动。您可以使用 'pm2 logs flock-training-node' 查看日志。"
+}
+
 # 主菜单
 function main_menu() {
     clear
     echo "脚本以及教程由推特用户大赌哥 @y95277777 编写，免费开源，请勿相信收费"
-    echo "=========================Flock验证者节点安装======================================="
+    echo "=========================Flock节点安装======================================="
     echo "节点社区 Telegram 群组:https://t.me/niuwuriji"
     echo "节点社区 Telegram 频道:https://t.me/niuwuriji"
     echo "请选择要执行的操作:"
-    echo "1. 安装常规节点"
-    echo "2. 查看节点日志"
-    echo "3. 删除节点"
-    read -p "请输入选项（1-3）: " OPTION
+    echo "1. 安装验证者节点"
+    echo "2. 安装训练节点"
+    echo "3. 查看验证者节点日志"
+    echo "4. 查看训练节点日志"
+    echo "5. 删除常规节点"
+    echo "6. 删除训练节点"
+    read -p "请输入选项（1-6）: " OPTION
     case $OPTION in
     1) install_node ;;
-    2) check_node ;;
-    3) uninstall_node ;;
+    2) install_train_node ;;
+    3) check_node ;;
+    4) pm2 logs flock-training-node ;;
+    5) uninstall_node ;;
+    6) pm2 delete flock-training-node && rm -rf testnet-training-node-quickstart ;;
     *) echo "无效选项。" ;;
     esac
 }
