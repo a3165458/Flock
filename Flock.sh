@@ -162,6 +162,28 @@ EOF
     echo "训练节点已启动。您可以使用 'pm2 logs flock-training-node' 查看日志。"
 }
 
+function update_task_id() {
+    read -p "输入新的任务ID (TASK_ID): " NEW_TASK_ID
+    
+    # 更新验证者节点的 Task ID
+    if [ -f "llm-loss-validator/run_validator.sh" ]; then
+        sed -i "s/--task_id \".*\"/--task_id \"$NEW_TASK_ID\"/" llm-loss-validator/run_validator.sh
+        pm2 restart llm-loss-validator
+        echo "验证者节点的 Task ID 已更新并重启。"
+    else
+        echo "未找到验证者节点的运行脚本。"
+    fi
+    
+    # 更新训练节点的 Task ID
+    if [ -f "testnet-training-node-quickstart/run_training_node.sh" ]; then
+        sed -i "s/TASK_ID=.*/TASK_ID=$NEW_TASK_ID/" testnet-training-node-quickstart/run_training_node.sh
+        pm2 restart flock-training-node
+        echo "训练节点的 Task ID 已更新并重启。"
+    else
+        echo "未找到训练节点的运行脚本。"
+    fi
+}
+
 # 主菜单
 function main_menu() {
     clear
@@ -176,7 +198,8 @@ function main_menu() {
     echo "4. 查看训练节点日志"
     echo "5. 删除常规节点"
     echo "6. 删除训练节点"
-    read -p "请输入选项（1-6）: " OPTION
+    echo "7. 修改验证者 Task ID 并重启节点"
+    read -p "请输入选项（1-7）: " OPTION
     case $OPTION in
     1) install_node ;;
     2) install_train_node ;;
@@ -184,6 +207,7 @@ function main_menu() {
     4) pm2 logs flock-training-node ;;
     5) uninstall_node ;;
     6) pm2 delete flock-training-node && rm -rf testnet-training-node-quickstart ;;
+    7) update_task_id ;;
     *) echo "无效选项。" ;;
     esac
 }
