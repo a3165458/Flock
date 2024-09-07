@@ -125,6 +125,8 @@ function uninstall_node() {
 function install_train_node() {
     install_conda
     ensure_conda_initialized
+    install_nodejs_and_npm
+    install_pm2
     
     # 安装必要的工具
     apt update && apt upgrade -y
