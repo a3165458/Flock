@@ -110,7 +110,7 @@ bash start.sh \
 --auto_clean_cache False
 EOF
     chmod +x run_validator.sh
-    pm2 start run_validator.sh --name "llm-loss-validator"
+    pm2 start run_validator.sh --name "llm-loss-validator" -- start && pm2 save && pm2 startup
     echo "验证者节点已经启动."
 }
 
@@ -159,7 +159,7 @@ EOF
     chmod +x run_training_node.sh
     
     # 使用 PM2 启动训练节点
-    pm2 start run_training_node.sh --name "flock-training-node"
+    pm2 start run_training_node.sh --name "flock-training-node" -- start && pm2 save && pm2 startup
     
     echo "训练节点已启动。您可以使用 'pm2 logs flock-training-node' 查看日志。"
 }
