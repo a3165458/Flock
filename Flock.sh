@@ -107,7 +107,7 @@ bash start.sh \
 --flock_api_key "$FLOCK_API_KEY" \
 --task_id "$TASK_ID" \
 --validation_args_file validation_config.json.example \
---auto_clean_cache False
+--auto_clean_cache True
 EOF
     chmod +x run_validator.sh
     pm2 start run_validator.sh --name "llm-loss-validator" -- start && pm2 save && pm2 startup
