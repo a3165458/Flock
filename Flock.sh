@@ -76,12 +76,12 @@ function install_pm2() {
 }
 
 function install_node() {
+    apt update && apt upgrade -y
+    apt install curl sudo git python3-venv iptables build-essential wget jq make gcc nano npm -y
     install_conda
     ensure_conda_initialized
     install_nodejs_and_npm
     install_pm2
-    apt update && apt upgrade -y
-    apt install curl sudo git python3-venv iptables build-essential wget jq make gcc nano npm -y
     read -p "输入Hugging face API: " HF_TOKEN
     read -p "输入Flock API: " FLOCK_API_KEY
     read -p "输入任务ID: " TASK_ID
