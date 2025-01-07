@@ -102,6 +102,7 @@ function install_node() {
 source "$MINICONDA_PATH/bin/activate" llm-loss-validator
 cd $SCRIPT_DIR/src
 CUDA_VISIBLE_DEVICES=0 \
+TIME_SLEEP=180 \
 bash start.sh \
 --hf_token "$HF_TOKEN" \
 --flock_api_key "$FLOCK_API_KEY" \
