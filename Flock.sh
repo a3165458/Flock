@@ -35,7 +35,7 @@ ensure_conda_initialized() {
         source "$HOME/.zshrc"
     fi
     if [ -f "$CONDA_EXECUTABLE" ]; then
-        eval "$("$CONDA_EXECUTABLE" shell.bash hook 2>/dev/null || $CONDA_EXECUTABLE" shell.zsh hook)"
+        eval "$("$CONDA_EXECUTABLE" shell.bash hook 2>/dev/null || "$CONDA_EXECUTABLE" shell.zsh hook)"
     fi
 }
 
@@ -149,7 +149,7 @@ install_node() {
 
     echo "🐍 创建 Conda 环境..."
     conda create -n llm-loss-validator python==3.10 -y
-    source "$MINICONDA_PATH/bin/activate" llm-loss-validator
+    source "$MINICONDA_PATH/bin/activate llm-loss-validator"
 
     echo "📦 安装 Python 依赖..."
     pip install -r requirements.txt
