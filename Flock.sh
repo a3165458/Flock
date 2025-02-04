@@ -203,7 +203,7 @@ install_train_node() {
     cat << EOF > run_training_node.sh
 #!/bin/bash
 source "$MINICONDA_PATH/bin/activate" training-node
-TASK_ID=$TASK_ID FLOCK_API_KEY="$FLOCK_API_KEY" HF_TOKEN="$HF_TOKEN" \\
+TASK_ID=$TASK_ID FLOCK_API_KEY="$FLOCK_API_KEY" HF_TOKEN="$HF_TOKEN"
 CUDA_VISIBLE_DEVICES=0 HF_USERNAME="$HF_USERNAME" python full_automation.py
 EOF
 
