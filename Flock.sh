@@ -173,10 +173,38 @@ EOF
     chmod +x run_validator.sh
     pm2 start run_validator.sh --name "llm-loss-validator" && pm2 save
 
+    # 添加 GitHub 仓库更新检测脚本
+    echo "📝 生成 GitHub 仓库更新检测脚本..."
+    cat << EOF > check_update.sh
+#!/bin/bash
+source "$MINICONDA_PATH/bin/activate" llm-loss-validator
+cd $SCRIPT_DIR || exit 1
+
+# 获取远程仓库最新提交哈希
+REMOTE_HASH=\$(git ls-remote https://github.com/FLock-io/llm-loss-validator.git HEAD | awk '{print \$1}')
+# 获取本地仓库最新提交哈希
+LOCAL_HASH=\$(git rev-parse HEAD)
+
+# 比较哈希值，判断是否有更新
+if [ "\$REMOTE_HASH" != "\$LOCAL_HASH" ]; then
+    echo "🔄 检测到 GitHub 仓库更新，正在拉取最新代码..."
+    git pull
+    pm2 restart llm-loss-validator
+    echo "✅ 验证者节点已更新并重启"
+else
+    echo "✅ 仓库已是最新版本，无需更新"
+fi
+EOF
+
+    chmod +x check_update.sh
+    # 使用 PM2 每小时运行一次更新检测（每3600秒）
+    pm2 start check_update.sh --name "llm-loss-validator-update" --cron "0 */1 * * *" && pm2 save
+
     # Linux 自动配置开机启动
     [ "$OS_TYPE" = "linux" ] && pm2 startup
 
     echo "🎉 验证者节点已启动！使用 'pm2 logs llm-loss-validator' 查看日志"
+    echo "🔄 已启用 GitHub 仓库自动更新检测，每小时检查一次，使用 'pm2 logs llm-loss-validator-update' 查看更新日志"
 }
 
 # 安装训练节点
@@ -195,7 +223,7 @@ install_train_node() {
     pip install -r requirements.txt
 
     read -p "📌 输入任务 ID: " TASK_ID
-    read -p "🔑 输入 Flock API Key: " FLOCK_API_KEY
+    read -p "🔑 输入 Flock API Key: " F  FLOCK_API_KEY
     read -p "🔑 输入 Hugging Face Token: " HF_TOKEN
     read -p "👤 输入 Hugging Face 用户名: " HF_USERNAME
 
@@ -218,7 +246,11 @@ EOF
 
 # 节点管理功能
 check_node() { pm2 logs llm-loss-validator; }
-uninstall_node() { pm2 delete llm-loss-validator && rm -rf llm-loss-validator; }
+uninstall_node() { 
+    pm2 delete llm-loss-validator
+    pm2 delete llm-loss-validator-update
+    rm -rf llm-loss-validator
+}
 update_task_id() {
     read -p "🆔 输入新任务 ID: " NEW_TASK_ID
     
@@ -242,6 +274,7 @@ update_node() {
     if [ -d "llm-loss-validator" ]; then
         echo "🔄 升级验证者节点..."
         cd llm-loss-validator && git pull
+        source "$MINICONDA_PATH/bin/activate" llm-loss-validator
         pip install -r requirements.txt
         pm2 restart llm-loss-validator
     fi
@@ -250,6 +283,7 @@ update_node() {
     if [ -d "testnet-training-node-quickstart" ]; then
         echo "🔄 升级训练节点..."
         cd testnet-training-node-quickstart && git pull
+        source "$MINICONDA_PATH/bin/activate" training-node
         pip install -r requirements.txt
         pm2 restart flock-training-node
     fi
