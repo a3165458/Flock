@@ -139,7 +139,7 @@ base_install() {
 install_node() {
     base_install
 
-    read -p "🔑 输入 Hugging face API: " HF_TOKEN
+    read -p "🔑 输入 Hugging Face API: " HF_TOKEN
     read -p "🔑 输入 Flock API: " FLOCK_API_KEY
     read -p "📌 输入任务 ID: " TASK_ID
 
@@ -197,8 +197,8 @@ fi
 EOF
 
     chmod +x check_update.sh
-    # 使用 PM2 每小时运行一次更新检测（每3600秒）
-    pm2 start check_update.sh --name "llm-loss-validator-update" --cron "0 */1 * * *" && pm2 save
+    # 使用 PM2 每小时运行一次更新检测，添加 --no-autorestart
+    pm2 start check_update.sh --name "llm-loss-validator-update" --cron "0 */1 * * *" --no-autorestart && pm2 save
 
     # Linux 自动配置开机启动
     [ "$OS_TYPE" = "linux" ] && pm2 startup
@@ -223,7 +223,7 @@ install_train_node() {
     pip install -r requirements.txt
 
     read -p "📌 输入任务 ID: " TASK_ID
-    read -p "🔑 输入 Flock API Key: " F  FLOCK_API_KEY
+    read -p "🔑 输入 Flock API Key: " FLOCK_API_KEY
     read -p "🔑 输入 Hugging Face Token: " HF_TOKEN
     read -p "👤 输入 Hugging Face 用户名: " HF_USERNAME
 
